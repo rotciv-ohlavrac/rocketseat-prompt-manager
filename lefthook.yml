@@ -1,7 +1,7 @@
 pre-commit:
   commands:
     check:
-      run: bun format
+      run: bun format {staged_files}
       glob: '**/*.{ts,tsx,js,jsx,json,css,scss,md}'
       staged_fixed: true
 pre-push:
