@@ -1,0 +1,17 @@
+pre-commit:
+  commands:
+    check:
+      run: bun format
+      glob: '**/*.{ts,tsx,js,jsx,json,css,scss,md}'
+      staged_fixed: true
+pre-push:
+  commands:
+    validate:
+      glob: '**/*.{ts,tsx}'
+      run: bun typecheck
+    lint:
+      glob: '**/*.{ts,tsx}'
+      run: bun lint
+    test:
+      glob: '**/*.{ts,tsx}'
+      run: bun test:coverage
