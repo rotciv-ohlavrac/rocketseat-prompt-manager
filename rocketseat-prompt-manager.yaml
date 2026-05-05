@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rocketseat-prompt-manager
+  labels:
+    app: prompt-manager
+spec:
+  containers:
+    - name: postgres
+      image: docker.io/library/postgres:17-alpine
+      env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: rocketseat_prompt_manager
+      ports:
+        - containerPort: 5432
+          hostPort: 5432
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres_data
+      # O Podman traduz o healthcheck do Docker para Startup/Liveness probes
+      startupProbe:
+        exec:
+          command: ["pg_isready", "-U", "postgres"]
+        failureThreshold: 5
+        periodSeconds: 10
+
+  volumes:
+    - name: postgres_data
+      hostPath:
+        path: ./postgres_data
+        type: DirectoryOrCreate
