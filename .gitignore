@@ -40,6 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 # database
-/postgres_data
+.postgres_data/*
 # prisma
 /app/generated/prisma
