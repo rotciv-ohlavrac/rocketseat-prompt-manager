@@ -6,14 +6,15 @@ const config = createJestConfig({
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/$1',
   },
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/.next/',
     '/e2e/',
-    '/src/components/ui/',
-    '/src/lib/',
+    '/components/ui/',
+    '/lib/',
+    '/app/generated/',
   ],
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
