@@ -5,7 +5,7 @@ async function Sidebar() {
   const prompts = await prismaClient.prompt.findMany({
     orderBy: { createdAt: 'desc' },
   });
-  return <SidebarContent />;
+  return <SidebarContent prompts={prompts} />;
 }
 
 export { Sidebar };
