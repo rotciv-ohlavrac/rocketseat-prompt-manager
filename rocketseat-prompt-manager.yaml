@@ -24,12 +24,12 @@ spec:
       # O Podman traduz o healthcheck do Docker para Startup/Liveness probes
       startupProbe:
         exec:
-          command: ["pg_isready", "-U", "postgres"]
+          command: ['pg_isready', '-U', 'postgres']
         failureThreshold: 5
         periodSeconds: 10
 
   volumes:
     - name: postgres_data
       hostPath:
-        path: ./postgres_data
+        path: ./.postgres_data
         type: DirectoryOrCreate
