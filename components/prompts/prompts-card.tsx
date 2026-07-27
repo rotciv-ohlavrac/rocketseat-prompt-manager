@@ -1,11 +1,11 @@
 import { PromptSummary } from '@/core/domain/prompts/prompts.entity';
 import Link from 'next/link';
 
-type PrompCardProps = {
+type PromptsCardProps = {
   prompt: PromptSummary;
 };
 
-function PromptsCard({ prompt }: PrompCardProps) {
+function PromptsCard({ prompt }: PromptsCardProps) {
   return (
     <li className="p-3 rounded-lg transition-all duration-200 group relative hover:bg-gray-700">
       <header className="flex items-start justify-between">
@@ -24,4 +24,4 @@ function PromptsCard({ prompt }: PrompCardProps) {
 }
 
 export { PromptsCard };
-export type { PrompCardProps };
+export type { PromptsCardProps };
