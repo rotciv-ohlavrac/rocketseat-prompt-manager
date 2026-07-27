@@ -40,6 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 # database
-.postgres_data/*
+.postgres_data
 # prisma
 /app/generated/prisma
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
