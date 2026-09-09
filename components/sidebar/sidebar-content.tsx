@@ -1,25 +1,29 @@
 'use client';
 
-import React, {
+import {
+  useState,
   startTransition,
   useActionState,
   useEffect,
   useRef,
 } from 'react';
+import { useQueryState } from 'nuqs';
 import { Button } from '../ui/button';
 import {
   ArrowLeftToLine,
   X as CloseButton,
   Plus as AddIcon,
   ArrowRightToLine,
+  Menu,
 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Logo } from '../logo';
 import { Input } from '../ui/input';
 import { PromptSummary } from '@/core/domain/prompts/prompts.entity';
 import { PromptsList } from '../prompts';
 import { searchPromptAction } from '@/app/actions/prompt.actions';
 import { Spinner } from '../ui/spinner';
+import { motion } from 'motion/react';
 
 export type SidebarContentProps = {
   prompts: PromptSummary[];
@@ -27,9 +31,9 @@ export type SidebarContentProps = {
 
 function SidebarContent({ prompts }: SidebarContentProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isCollapsed, setIsCollapsed] = React.useState<boolean>(false);
-  const [query, setQuery] = React.useState<string>(searchParams.get('q') ?? '');
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
+  const [query, setQuery] = useQueryState('q', { defaultValue: '' });
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -41,8 +45,12 @@ function SidebarContent({ prompts }: SidebarContentProps) {
   const hasQuery = query.trim().length > 0;
   const promptList = hasQuery ? (searchState.prompts ?? prompts) : prompts;
 
+  const fadeTransition = { duration: 0.2, delay: 0.1 };
+
   const collapseSidebar = () => setIsCollapsed(true);
   const expandSidebar = () => setIsCollapsed(false);
+  const openMobile = () => setIsMobileOpen(true);
+  const closeMobile = () => setIsMobileOpen(false);
 
   const handleNewPrompt = () => router.push('/new');
 
@@ -50,8 +58,6 @@ function SidebarContent({ prompts }: SidebarContentProps) {
     const newQuery = e.target.value;
     setQuery(newQuery);
     startTransition(() => {
-      const url = newQuery ? `/?q=${encodeURIComponent(newQuery)}` : '/';
-      router.push(url, { scroll: false });
       formRef.current?.requestSubmit();
     });
   };
@@ -76,7 +82,7 @@ function SidebarContent({ prompts }: SidebarContentProps) {
           <header className="flex items-center justify-center mb-6">
             <Button
               variant="icon"
-              className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
+              className="md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
               aria-label="Expandir sidebar"
               title="Expandir sidebar"
               onClick={expandSidebar}
@@ -84,7 +90,12 @@ function SidebarContent({ prompts }: SidebarContentProps) {
               <ArrowRightToLine className="w-5 h-5 text-gray-100" />
             </Button>
           </header>
-          <div className="flex flex-col items-center space-y-4">
+          <motion.div
+            className="flex flex-col items-center space-y-4"
+            initial={false}
+            animate={{ opacity: 1 }}
+            transition={fadeTransition}
+          >
             <Button
               onClick={handleNewPrompt}
               aria-label="Novo prompt"
@@ -92,7 +103,7 @@ function SidebarContent({ prompts }: SidebarContentProps) {
             >
               <AddIcon className="w-5 h-5 text-white" />
             </Button>
-          </div>
+          </motion.div>
         </section>
       );
 
@@ -105,17 +116,23 @@ function SidebarContent({ prompts }: SidebarContentProps) {
                 variant="secondary"
                 aria-label="Fechar menu"
                 title="Fechar menu"
+                onClick={closeMobile}
               >
                 <CloseButton className="w-5 h-5 text-gray-100" />
               </Button>
             </div>
           </div>
-          <div className="flex w-full items-center justify-between mb-6">
+          <motion.div
+            className="flex w-full items-center justify-between mb-6"
+            initial={false}
+            animate={{ opacity: 1 }}
+            transition={fadeTransition}
+          >
             <header className="flex w-full items-center justify-between">
               <Logo />
               <Button
                 variant="icon"
-                className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
+                className="md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
                 onClick={collapseSidebar}
                 aria-label="Minimizar sidebar"
                 title="Minimizar sidebar"
@@ -123,7 +140,7 @@ function SidebarContent({ prompts }: SidebarContentProps) {
                 <ArrowLeftToLine className="w-5 h-5 text-gray-100" />
               </Button>
             </header>
-          </div>
+          </motion.div>
           <section className="mb-5">
             <form
               action={searchAction}
@@ -141,19 +158,28 @@ function SidebarContent({ prompts }: SidebarContentProps) {
               {renderSpinner()}
             </form>
           </section>
-          <div className="">
+          <motion.div
+            initial={false}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={fadeTransition}
+          >
             <Button className="w-full" size="lg" onClick={handleNewPrompt}>
               <AddIcon className="w-5 h-5 mr-2" />
               Novo Prompt
             </Button>
-          </div>
+          </motion.div>
         </section>
-        <nav
+        <motion.nav
           className="flex-1 overflow-auto px-6 pb-6"
           aria-label="Lista de prompts"
+          initial={false}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={fadeTransition}
         >
           <PromptsList prompts={promptList} />
-        </nav>
+        </motion.nav>
       </>
     );
   };
@@ -164,11 +190,25 @@ function SidebarContent({ prompts }: SidebarContentProps) {
   }, [hasQuery]);
 
   return (
-    <aside
-      className={`border-r border-gray-700 flex flex-col h-full bg-gray-800 transition-[transform, width] duration-300 ease-in-out fixed md:relative left-0 top-0 z-50 md:z-auto w-[80vw] sm:w-[320px] ${isCollapsed ? 'md:w-[72px]' : 'md:w-[384px]'}`}
-    >
-      {renderContent()}
-    </aside>
+    <>
+      <Button
+        className="md:hidden fixed top-6 left-6 z-50"
+        variant="secondary"
+        title="Abrir menu"
+        aria-label="Abrir menu"
+        aria-expanded={isMobileOpen}
+        onClick={openMobile}
+      >
+        <Menu className="w-5 h-5 text-gray-100" />
+      </Button>
+      <motion.aside
+        className={`border-r border-gray-700 flex flex-col h-full bg-gray-800 transition-[transform, width] duration-300 ease-in-out fixed md:relative left-0 top-0 z-50 md:z-auto w-[80vw] sm:w-[320px] ${isCollapsed ? 'md:w-18' : 'md:w-[384px]'} ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        initial={false}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        {renderContent()}
+      </motion.aside>
+    </>
   );
 }
 
