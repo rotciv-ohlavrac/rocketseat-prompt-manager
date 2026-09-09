@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
       '**/postgres_data/**',
       'dist/**',
       'node_modules/**',
+      'playwright-report/**',
+      'coverage/**',
     ],
   },
   ...nextVitals,
