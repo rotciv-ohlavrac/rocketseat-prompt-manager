@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
 
 interface CopyButtonProps {
   content: string;
@@ -37,20 +38,9 @@ function CopyButton({ content }: CopyButtonProps) {
     }
   }
 
-  function renderCopyButtonContent() {
-    if (!isCopied)
-      return (
-        <>
-          <Copy className="h-4 w-4" />
-          <span>Copiar</span>
-        </>
-      );
-    return (
-      <>
-        <span>Copiado</span>
-        <Check className="h-4 w-4" />
-      </>
-    );
+  function renderButtonIcon() {
+    if (!isCopied) return <Copy className="h-4 w-4" />;
+    return <Check className="h-4 w-4" />;
   }
 
   useEffect(() => {
@@ -68,7 +58,16 @@ function CopyButton({ content }: CopyButtonProps) {
       disabled={isContentEmpty}
       onClick={handleCopy}
     >
-      {renderCopyButtonContent()}
+      {renderButtonIcon()}
+      <motion.span
+        key={isCopied ? 'copiado' : 'copiar'}
+        initial={{ opacity: 0, y: 2 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -2 }}
+        transition={{ duration: 0.1 }}
+      >
+        {isCopied ? 'Copiado' : 'Copiar'}
+      </motion.span>
     </Button>
   );
 }
