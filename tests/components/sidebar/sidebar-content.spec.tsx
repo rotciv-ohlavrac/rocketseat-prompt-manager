@@ -4,12 +4,26 @@ import {
 } from '@/components/sidebar/sidebar-content';
 import { render, screen, waitFor } from '@/lib/test-utils';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 
 const pushMock = jest.fn();
+const setQueryMock = jest.fn();
 let mockSearchParams = new URLSearchParams();
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: pushMock }),
-  useSearchParams: () => mockSearchParams,
+}));
+
+jest.mock('nuqs', () => ({
+  useQueryState: (key: string) => {
+    const [value, setValue] = useState(mockSearchParams.get(key) ?? '');
+
+    const setQuery = (nextValue: string) => {
+      setQueryMock(nextValue);
+      setValue(nextValue);
+    };
+
+    return [value, setQuery] as const;
+  },
 }));
 
 const initialPrompts = [
@@ -172,13 +186,13 @@ describe('SidebarContent', () => {
 
       await user.type(searchInput, text);
 
-      expect(pushMock).toHaveBeenCalled();
-      const lastCall = pushMock.mock.calls.at(-1);
-      expect(lastCall?.[0]).toBe('/?q=A%20B');
+      expect(setQueryMock).toHaveBeenCalled();
+      const lastCall = setQueryMock.mock.calls.at(-1);
+      expect(lastCall?.[0]).toBe(text);
 
       await user.clear(searchInput);
-      const lastClearCall = pushMock.mock.calls.at(-1);
-      expect(lastClearCall?.[0]).toBe('/');
+      const lastClearCall = setQueryMock.mock.calls.at(-1);
+      expect(lastClearCall?.[0]).toBe('');
     });
     it('should submit the form when typeing and pressing Enter', async () => {
       makeSut();
@@ -207,6 +221,23 @@ describe('SidebarContent', () => {
       const searchInput = screen.getByPlaceholderText('Buscar prompts...');
 
       await waitFor(() => expect(searchInput).toHaveValue(text));
+    });
+  });
+
+  describe('SidebarContent - Mobile', () => {
+    it('should open and close mobile menu', async () => {
+      makeSut();
+
+      const aside = screen.getByRole('complementary');
+      expect(aside.className).toContain('-translate-x-full');
+
+      const openButton = screen.getByRole('button', { name: 'Abrir menu' });
+      await user.click(openButton);
+      expect(aside.className).toContain('translate-x-0');
+
+      const closeButton = screen.getByRole('button', { name: 'Fechar menu' });
+      await user.click(closeButton);
+      expect(aside.className).toContain('-translate-x-full');
     });
   });
 });

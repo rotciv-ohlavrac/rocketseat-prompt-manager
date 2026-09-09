@@ -1,4 +1,4 @@
-import { PromptForm } from '@/components/prompts/prompts-form';
+import { PromptForm, PromptFormProps } from '@/components/prompts/prompts-form';
 import { render, screen } from '@/lib/test-utils';
 import { toast } from 'sonner';
 import userEvent from '@testing-library/user-event';
@@ -12,8 +12,10 @@ jest.mock('next/navigation', () => ({
 }));
 
 const createPromptActionMock = jest.fn();
+const updatePromptActionMock = jest.fn();
 jest.mock('@/app/actions/prompt.actions', () => ({
   createPromptAction: (...args: unknown[]) => createPromptActionMock(...args),
+  updatePromptAction: (...args: unknown[]) => updatePromptActionMock(...args),
 }));
 
 jest.mock('sonner', () => ({
@@ -23,8 +25,8 @@ jest.mock('sonner', () => ({
   },
 }));
 
-const makeSut = () => {
-  return render(<PromptForm />);
+const makeSut = ({ prompt }: PromptFormProps = {}) => {
+  return render(<PromptForm prompt={prompt} />);
 };
 
 describe('PromptForm', () => {
@@ -32,6 +34,7 @@ describe('PromptForm', () => {
 
   beforeEach(() => {
     createPromptActionMock.mockReset();
+    updatePromptActionMock.mockReset();
     mockedRefresh.mockReset();
     (toast.success as jest.Mock).mockReset();
     (toast.error as jest.Mock).mockReset();
@@ -95,5 +98,42 @@ describe('PromptForm', () => {
     expect(screen.getByText(/Título é obrigatório/i)).toBeInTheDocument();
     expect(screen.getByText(/Conteúdo é obrigatório/i)).toBeInTheDocument();
     expect(createPromptActionMock).not.toHaveBeenCalled();
+  });
+  it('should update a existing prompt with success', async () => {
+    updatePromptActionMock.mockResolvedValueOnce({
+      success: true,
+      message: 'Prompt atualizado com sucesso',
+    });
+    const now = new Date();
+    const prompt = {
+      id: '1',
+      title: 'old',
+      content: 'old',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    makeSut({ prompt });
+
+    const titleInput = screen.getByPlaceholderText('Título do prompt');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'new title');
+
+    const contentInput = screen.getByPlaceholderText(
+      'Digite o conteúdo do prompt...'
+    );
+    await user.clear(contentInput);
+    await user.type(contentInput, 'new content');
+
+    const submitButton = screen.getByRole('button', { name: 'Salvar' });
+    await user.click(submitButton);
+
+    expect(updatePromptActionMock).toHaveBeenCalledWith({
+      id: prompt.id,
+      title: 'new title',
+      content: 'new content',
+    });
+    expect(toast.success).toHaveBeenCalledWith('Prompt atualizado com sucesso');
+    expect(mockedRefresh).toHaveBeenCalledTimes(1);
   });
 });

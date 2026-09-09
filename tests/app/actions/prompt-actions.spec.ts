@@ -1,13 +1,16 @@
 import {
   createPromptAction,
+  deletePromptAction,
   searchPromptAction,
+  updatePromptAction,
 } from '@/app/actions/prompt.actions';
-import { PrismaPromptRepository } from '@/infra/repository/prisma-prompt.repository';
 
 jest.mock('@/lib/prisma', () => ({ prisma: {} }));
 
 const mockedSearchExecute = jest.fn();
 const mockedCreateExecute = jest.fn();
+const mockedUpdateExecute = jest.fn();
+const mockedDeleteExecute = jest.fn();
 
 jest.mock('@/core/application/prompts/search-prompts.use-case', () => ({
   SearchPromptsUseCase: jest
@@ -21,10 +24,24 @@ jest.mock('@/core/application/prompts/create-prompts.use-case', () => ({
     .mockImplementation(() => ({ execute: mockedCreateExecute })),
 }));
 
+jest.mock('@/core/application/prompts/update-prompts.use-case', () => ({
+  UpdatePromptUseCase: jest
+    .fn()
+    .mockImplementation(() => ({ execute: mockedUpdateExecute })),
+}));
+
+jest.mock('@/core/application/prompts/delete-prompts.use-case', () => ({
+  DeletePromptUseCase: jest
+    .fn()
+    .mockImplementation(() => ({ execute: mockedDeleteExecute })),
+}));
+
 describe('Server Actions: Prompts', () => {
   beforeEach(() => {
     mockedSearchExecute.mockReset();
     mockedCreateExecute.mockReset();
+    mockedUpdateExecute.mockReset();
+    mockedDeleteExecute.mockReset();
   });
 
   describe('searchPromptAction', () => {
@@ -142,6 +159,103 @@ describe('Server Actions: Prompts', () => {
 
       expect(result?.success).toBe(false);
       expect(result?.message).toBe('Falha ao criar prompt');
+    });
+  });
+  describe('updatePromptAction', () => {
+    it('should update prompt successfully', async () => {
+      mockedUpdateExecute.mockResolvedValueOnce({});
+      const promptId = '1';
+      const data = {
+        id: promptId,
+        title: 'new title',
+        content: 'new content',
+      };
+
+      const result = await updatePromptAction(data);
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Prompt atualizado com sucesso');
+    });
+    it('should return validation error when there are missing fields', async () => {
+      const data = {
+        id: '1',
+        title: '',
+        content: '',
+      };
+
+      const result = await updatePromptAction(data);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Erro de validação');
+      expect(result.errors).toBeDefined();
+    });
+    it('should return error when prompt does not exists', async () => {
+      mockedUpdateExecute.mockRejectedValue(new Error('PROMPT_NOT_FOUND'));
+
+      const promptId = '1';
+      const data = {
+        id: promptId,
+        title: 'New',
+        content: 'Content',
+      };
+
+      const result = await updatePromptAction(data);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Prompt não encontrado');
+    });
+    it('should return generic error when failed to update prompt', async () => {
+      mockedUpdateExecute.mockRejectedValue(new Error('UNKOWN'));
+      const promptId = '1';
+
+      const data = {
+        id: promptId,
+        title: 'title',
+        content: 'content',
+      };
+
+      const result = await updatePromptAction(data);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Falha ao atualizar o prompt');
+    });
+  });
+  describe('deletePromptAction', () => {
+    it('should return error when id is empty', async () => {
+      const promptId = '';
+
+      const result = await deletePromptAction(promptId);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Id do prompt é obrigatório');
+    });
+    it('should return error when prompt does not exists', async () => {
+      const errorMessage = 'PROMPT_NOT_FOUND';
+      mockedDeleteExecute.mockRejectedValue(new Error(errorMessage));
+      const promptId = '1';
+
+      const result = await deletePromptAction(promptId);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Prompt não encontrado');
+    });
+    it('should return generic error when action fails', async () => {
+      mockedDeleteExecute.mockRejectedValue(new Error('UNKNOWN'));
+      const promptId = '1';
+
+      const result = await deletePromptAction(promptId);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Falha ao remover o prompt');
+    });
+    it('should delete prompt successfully', async () => {
+      mockedDeleteExecute.mockResolvedValue(undefined);
+      const promptId = '1';
+
+      const result = await deletePromptAction(promptId);
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Prompt removido com sucesso');
     });
   });
 });

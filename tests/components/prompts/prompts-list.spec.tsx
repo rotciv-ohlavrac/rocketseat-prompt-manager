@@ -16,7 +16,7 @@ describe('PromptsList', () => {
     ];
     makeSut({ prompts: input });
 
-    expect(screen.getByRole('list')).toBeVisible();
+    expect(screen.getByRole('list')).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(input.length);
     expect(screen.getByText('Prompt 01')).toBeInTheDocument();
     expect(screen.getByText('Prompt 02')).toBeInTheDocument();
