@@ -1,6 +1,7 @@
 import { PrismaClient } from '@/app/generated/prisma/client';
 import { CreatePromptDTO } from '@/core/application/prompts/create-prompts.dto';
 import { PromptRepository } from '@/core/domain/prompts/prompt.repository';
+import { Prompt } from '@/core/domain/prompts/prompts.entity';
 
 export class PrismaPromptRepository implements PromptRepository {
   constructor(private prismaClient: PrismaClient) {}
@@ -35,10 +36,30 @@ export class PrismaPromptRepository implements PromptRepository {
     });
   }
 
+  async update(id: string, data: Partial<CreatePromptDTO>): Promise<Prompt> {
+    const updated = await this.prismaClient.prompt.update({
+      where: { id },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.content && { content: data.content }),
+      },
+    });
+    return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prismaClient.prompt.delete({ where: { id } });
+  }
+
   async findByTitle(title: string) {
     const prompt = await this.prismaClient.prompt.findFirst({
       where: { title },
     });
+    return prompt;
+  }
+
+  async findById(id: string): Promise<Prompt | null> {
+    const prompt = await this.prismaClient.prompt.findUnique({ where: { id } });
     return prompt;
   }
 }
